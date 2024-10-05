@@ -9,6 +9,10 @@ import ZoomVideo, {
 
 const USER_NAME = `User-${new Date().getTime().toString().slice(8)}`
 
+const roundUpToSecondDecimal = (num: number) => {
+  return Math.ceil(num * 100) / 100
+}
+
 const calculateScaleFactor = (
   height: number,
   width: number,
@@ -20,9 +24,12 @@ const calculateScaleFactor = (
 
   const imageAspect = width / height
 
-  return aspectRatio > imageAspect
-    ? (aspectRatio * height) / width // コンテンツが画像より横長の場合、高さに基づいてスケール
-    : width / (aspectRatio * height) // コンテンツが画像より縦長または同じ場合、横幅に基づいてスケール
+  const scale =
+    aspectRatio > imageAspect
+      ? (aspectRatio * height) / width // コンテンツが画像より横長の場合、高さに基づいてスケール
+      : width / (aspectRatio * height) // コンテンツが画像より縦長または同じ場合、横幅に基づいてスケール
+
+  return roundUpToSecondDecimal(scale)
 }
 
 const TestRoom = (props: { slug: string; JWT: string }) => {
@@ -30,7 +37,9 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient())
   const localVideoRef = useRef<HTMLDivElement>(null)
   const remoteVideoRef = useRef<HTMLDivElement>(null)
-  const [remoteVideoAspectRatio, setRemoteVideoAspectRatio] = useState(null)
+  const [remoteVideoAspectRatio, setRemoteVideoAspectRatio] = useState<
+    number | null
+  >(null)
 
   const joinSession = useCallback(async () => {
     client.current.on('peer-video-state-change', onPeerVideoStateChange)
@@ -131,7 +140,8 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
 
       {/* リモートビデオ */}
       <h2 className='font-bold'>Remote</h2>
-      <div className='w-[300px] h-[169px] bg-black overflow-hidden'>
+      {/* <div className='w-[300px] h-[169px] bg-black overflow-hidden'> */}
+      <div className='w-full h-full bg-black overflow-hidden'>
         <div
           style={{
             transform: `scale(${calculateScaleFactor(
