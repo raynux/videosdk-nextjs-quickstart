@@ -9,11 +9,24 @@ import ZoomVideo, {
 
 const USER_NAME = `User-${new Date().getTime().toString().slice(8)}`
 
+const calculateScaleFactor = (
+  height: number,
+  width: number,
+  aspectRatio: number
+): number => {
+  const imageAspect = width / height
+
+  return aspectRatio > imageAspect
+    ? (aspectRatio * height) / width // コンテンツが画像より横長の場合、高さに基づいてスケール
+    : width / (aspectRatio * height) // コンテンツが画像より縦長または同じ場合、横幅に基づいてスケール
+}
+
 const TestRoom = (props: { slug: string; JWT: string }) => {
   const clientInitializing = useRef(false)
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient())
   const localVideoRef = useRef<HTMLDivElement>(null)
   const remoteVideoRef = useRef<HTMLDivElement>(null)
+  const [remoteVideoAspectRatio, setRemoteVideoAspectRatio] = useState(16 / 9)
 
   const joinSession = useCallback(async () => {
     client.current.on('peer-video-state-change', onPeerVideoStateChange)
@@ -26,9 +39,12 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
 
     const mediaStream = client.current.getMediaStream()
     await mediaStream.startVideo({
-      originalRatio: true,
+      // originalRatio: true,
     })
-    console.debug('zoom client started video')
+    console.debug(
+      'zoom client started video',
+      client.current.getCurrentUserInfo()
+    )
 
     // 初回はイベントが発火しないので、手動で呼び出す
     await onPeerVideoStateChange({
@@ -73,26 +89,11 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
     userId: number
     aspectRatio: number
   }) => {
-    console.debug('video aspect ratio changed', event)
-
-    // const { userId, aspectRatio } = event
-    // const width = 300 // 任意の幅
-    // const height = width / aspectRatio
-
-    // const mediaStream = client.current.getMediaStream()
-    // const targetRef =
-    //   event.userId === client.current.getCurrentUserInfo().userId
-    //     ? localVideoRef
-    //     : remoteVideoRef
-
-    // mediaStream.adjustRenderedVideoPosition(
-    //   targetRef.current,
-    //   userId,
-    //   width,
-    //   height,
-    //   0,
-    //   0
-    // )
+    const { userId, aspectRatio } = event
+    if (userId != client.current.getCurrentUserInfo().userId) {
+      console.debug('remote video aspect ratio changed', aspectRatio)
+      setRemoteVideoAspectRatio(aspectRatio)
+    }
   }
 
   //
@@ -126,9 +127,18 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
 
       {/* リモートビデオ */}
       <h2 className='font-bold'>Remote</h2>
-      <div className='w-[300px] h-[169px] bg-black'>
-        {/* @ts-expect-error html component */}
-        <video-player-container ref={remoteVideoRef} />
+      <div className='w-[300px] h-[169px] bg-black overflow-hidden'>
+        <div
+          style={{
+            transform: `scale(${calculateScaleFactor(
+              169, // height
+              300, // width
+              remoteVideoAspectRatio
+            )})`,
+          }}>
+          {/* @ts-expect-error html component */}
+          <video-player-container ref={remoteVideoRef} />
+        </div>
       </div>
     </div>
   )

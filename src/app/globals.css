@@ -95,3 +95,7 @@ video-player {
   height: auto;
   aspect-ratio: 16/9;
 }
+
+video-player-container > video-player > video {
+  object-fit: cover;
+}
