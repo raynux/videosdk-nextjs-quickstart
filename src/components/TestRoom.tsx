@@ -53,6 +53,8 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
     const mediaStream = client.current.getMediaStream()
     await mediaStream.startVideo({
       // originalRatio: true,
+      captureWidth: 300,
+      captureHeight: 169,
     })
     console.debug(
       'zoom client started video',
@@ -98,6 +100,9 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
     targetRef.current!.appendChild(userVideo as VideoPlayer)
   }
 
+  //
+  // video-aspect-ratio-change イベントハンドラ
+  //
   const onVideoAspectRatioChange = (event: {
     userId: number
     aspectRatio: number
@@ -140,8 +145,7 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
 
       {/* リモートビデオ */}
       <h2 className='font-bold'>Remote</h2>
-      {/* <div className='w-[300px] h-[169px] bg-black overflow-hidden'> */}
-      <div className='w-full h-full bg-black overflow-hidden'>
+      <div className='w-[300px] h-[169px] bg-black overflow-hidden'>
         <div
           style={{
             transform: `scale(${calculateScaleFactor(
