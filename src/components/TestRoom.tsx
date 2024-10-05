@@ -52,9 +52,9 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
 
     const mediaStream = client.current.getMediaStream()
     await mediaStream.startVideo({
-      // originalRatio: true,
-      captureWidth: 300,
+      // これ、なんか意味ある？ 違いが分からない・・・
       captureHeight: 169,
+      captureWidth: 300,
     })
     console.debug(
       'zoom client started video',
@@ -138,14 +138,14 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
     <div className='flex flex-col items-start'>
       {/* ローカルビデオ */}
       <h2 className='font-bold'>Local</h2>
-      <div className='w-[300px] h-[169px] bg-black mb-5'>
+      <div className='w-[300px] h-[169] bg-black mb-5'>
         {/* @ts-expect-error html component */}
         <video-player-container ref={localVideoRef} />
       </div>
 
       {/* リモートビデオ */}
       <h2 className='font-bold'>Remote</h2>
-      <div className='w-[300px] h-[169px] bg-black overflow-hidden'>
+      <div className='w-[300px] h-[169] bg-black overflow-hidden'>
         <div
           style={{
             transform: `scale(${calculateScaleFactor(
