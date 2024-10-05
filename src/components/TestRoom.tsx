@@ -12,8 +12,12 @@ const USER_NAME = `User-${new Date().getTime().toString().slice(8)}`
 const calculateScaleFactor = (
   height: number,
   width: number,
-  aspectRatio: number
+  aspectRatio: number | null
 ): number => {
+  if (aspectRatio == null) {
+    return 1
+  }
+
   const imageAspect = width / height
 
   return aspectRatio > imageAspect
@@ -26,7 +30,7 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
   const client = useRef<typeof VideoClient>(ZoomVideo.createClient())
   const localVideoRef = useRef<HTMLDivElement>(null)
   const remoteVideoRef = useRef<HTMLDivElement>(null)
-  const [remoteVideoAspectRatio, setRemoteVideoAspectRatio] = useState(16 / 9)
+  const [remoteVideoAspectRatio, setRemoteVideoAspectRatio] = useState(null)
 
   const joinSession = useCallback(async () => {
     client.current.on('peer-video-state-change', onPeerVideoStateChange)
