@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ZoomVideo, {
   type VideoClient,
   VideoQuality,
@@ -8,28 +8,11 @@ import ZoomVideo, {
 } from '@zoom/videosdk'
 
 const USER_NAME = `User-${new Date().getTime().toString().slice(8)}`
+const VIDEO_WIDTH = 300
+const VIDEO_HEIGHT = 169
 
 const roundUpToSecondDecimal = (num: number) => {
   return Math.ceil(num * 100) / 100
-}
-
-const calculateScaleFactor = (
-  height: number,
-  width: number,
-  aspectRatio: number | null
-): number => {
-  if (aspectRatio == null) {
-    return 1
-  }
-
-  const imageAspect = width / height
-
-  const scale =
-    aspectRatio > imageAspect
-      ? (aspectRatio * height) / width // コンテンツが画像より横長の場合、高さに基づいてスケール
-      : width / (aspectRatio * height) // コンテンツが画像より縦長または同じ場合、横幅に基づいてスケール
-
-  return roundUpToSecondDecimal(scale)
 }
 
 const TestRoom = (props: { slug: string; JWT: string }) => {
@@ -40,6 +23,22 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
   const [remoteVideoAspectRatio, setRemoteVideoAspectRatio] = useState<
     number | null
   >(null)
+
+  // リモートビデオの拡大率
+  const scaleFactor = useMemo(() => {
+    if (remoteVideoAspectRatio == null) {
+      return 1
+    }
+
+    const imageAspect = VIDEO_WIDTH / VIDEO_HEIGHT
+
+    const scale =
+      remoteVideoAspectRatio > imageAspect
+        ? (remoteVideoAspectRatio * VIDEO_HEIGHT) / VIDEO_WIDTH // コンテンツが画像より横長の場合、高さに基づいてスケール
+        : VIDEO_WIDTH / (remoteVideoAspectRatio * VIDEO_HEIGHT) // コンテンツが画像より縦長または同じ場合、横幅に基づいてスケール
+
+    return roundUpToSecondDecimal(scale)
+  }, [remoteVideoAspectRatio])
 
   const joinSession = useCallback(async () => {
     client.current.on('peer-video-state-change', onPeerVideoStateChange)
@@ -53,8 +52,8 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
     const mediaStream = client.current.getMediaStream()
     await mediaStream.startVideo({
       // これ、なんか意味ある？ 違いが分からない・・・
-      captureHeight: 169,
-      captureWidth: 300,
+      captureHeight: VIDEO_HEIGHT,
+      captureWidth: VIDEO_WIDTH,
     })
     console.debug(
       'zoom client started video',
@@ -138,21 +137,21 @@ const TestRoom = (props: { slug: string; JWT: string }) => {
     <div className='flex flex-col items-start'>
       {/* ローカルビデオ */}
       <h2 className='font-bold'>Local</h2>
-      <div className='w-[300px] h-[169] bg-black mb-5'>
+      <div
+        className='bg-black mb-5'
+        style={{ width: VIDEO_WIDTH, height: VIDEO_HEIGHT }}>
         {/* @ts-expect-error html component */}
         <video-player-container ref={localVideoRef} />
       </div>
 
       {/* リモートビデオ */}
       <h2 className='font-bold'>Remote</h2>
-      <div className='w-[300px] h-[169] bg-black overflow-hidden'>
+      <div
+        className='bg-black overflow-hidden'
+        style={{ width: VIDEO_WIDTH, height: VIDEO_HEIGHT }}>
         <div
           style={{
-            transform: `scale(${calculateScaleFactor(
-              169, // height
-              300, // width
-              remoteVideoAspectRatio
-            )})`,
+            transform: `scale(${scaleFactor})`,
           }}>
           {/* @ts-expect-error html component */}
           <video-player-container ref={remoteVideoRef} />
