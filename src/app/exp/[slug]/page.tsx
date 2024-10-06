@@ -10,8 +10,9 @@ const TestRoom = dynamic<{ slug: string; JWT: string }>(
 export default async function Page({ params }: { params: { slug: string } }) {
   const jwt = await getData(params.slug)
   return (
-    <main className='p-4'>
-      <h1 className='font-bold mb-4'>Zoom Video Experiment</h1>
+    <main className=''>
+      <h1 className='font-bold m-4'>Zoom Video Experiment</h1>
+      <hr className='mb-4' />
       <TestRoom slug={params.slug} JWT={jwt} />
       <Script src='/coi-serviceworker.js' strategy='beforeInteractive' />
     </main>
